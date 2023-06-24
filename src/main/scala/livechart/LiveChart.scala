@@ -14,8 +14,6 @@ val javascriptLogo: String = js.native
 def LiveChart(): Unit =
   renderOnDomContentLoaded(
     dom.document.getElementById("app"),
-    ButtonAppElement.appElement()
-  )  
-
-
-
+    //ButtonAppElement.appElement()
+    TableAppElement.appElement()
+  )
