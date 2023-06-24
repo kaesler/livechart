@@ -11,9 +11,9 @@ import com.raquo.laminar.api.L.{*, given}
 val javascriptLogo: String = js.native
 
 @main
-def LiveChart(): Unit =
+def pageMain(): Unit =
   renderOnDomContentLoaded(
     dom.document.getElementById("app"),
-    //ButtonAppElement.appElement()
+    // ButtonAppElement.appElement()
     TableAppElement.appElement()
   )

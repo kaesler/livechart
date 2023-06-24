@@ -30,8 +30,8 @@ object TableAppElement:
       ),
       tbody(
         children <-- dataSignal.map:
-          _.map:
-            item => renderDataItem(item.id, item)
+          _.map: item =>
+            renderDataItem(item.id, item)
       ),
       tfoot(
         tr(
@@ -60,7 +60,7 @@ object TableAppElement:
       td("%.2f".format(item.fullPrice)),
       td(
         button(
-          "🗑️ trash",
+          "🗑️ trashit",
           onClick --> (_ => removeDataItem(id))
         )
       )
