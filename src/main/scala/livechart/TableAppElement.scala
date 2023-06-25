@@ -30,6 +30,9 @@ object TableAppElement:
       ),
       tbody(
         children <-- dataSignal.map:
+          // Note: on each model change we re-render
+          // all items.
+          // Inefficient and loses selection.
           _.map: item =>
             renderDataItem(item.id, item)
       ),
