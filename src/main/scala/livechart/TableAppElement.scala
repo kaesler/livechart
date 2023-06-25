@@ -13,7 +13,9 @@ object TableAppElement:
   def appElement(): Element =
     div(
       h1("Live Chart"),
-      renderDataTable()
+      renderDataTable(),
+      // Note: an extra view of the data
+      renderDataList()
     )
   end appElement
 
@@ -54,9 +56,24 @@ object TableAppElement:
     )
   end renderDataTable
 
+  private def renderDataList(): Element =
+    ul(
+      children <-- dataSignal.split(_.id): (_, _, itemSignal) =>
+        li(child.text <-- itemSignal.map(item => s"${item.count} ${item.label}"))
+    )
+  end renderDataList
+
   private def renderDataItem(id: DataItemID, itemSignal: Signal[DataItem]): Element =
     tr(
-      td(child.text <-- itemSignal.map(_.label)),
+      td(
+        inputForString(
+          itemSignal.map(_.label),
+          makeItemUpdater[String](
+            id,
+            (item, newLabel) => if item.id == id then item.copy(label = newLabel) else item
+          )
+        )
+      ),
       td(child.text <-- itemSignal.map(_.price)),
       td(child.text <-- itemSignal.map(_.count)),
       td(
@@ -70,5 +87,30 @@ object TableAppElement:
       )
     )
   end renderDataItem
+
+  private def makeItemUpdater[A](
+    id: DataItemID,
+    f: (DataItem, A) => DataItem
+  ): Observer[A] =
+    dataVar.updater[A]: (dataList, a) =>
+      dataList.map: item =>
+        if item.id == id then f(item, a) else item
+  end makeItemUpdater
+
+  // Note: this takes data model values as arguments,
+  // and returns a Laminar element manipulating those values.
+  // This is what many UI frameworks call a component.
+  // In Laminar, components are nothing but methods manipulating
+  // time-varying data and returning Laminar elements.
+  private def inputForString(
+    valueSignal: Signal[String],
+    valueUpdater: Observer[String]
+  ): Input =
+    input(
+      typ := "text",
+      value <-- valueSignal,
+      onInput.mapToValue --> valueUpdater
+    )
+  end inputForString
 
 end TableAppElement
