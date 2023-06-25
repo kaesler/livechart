@@ -29,12 +29,11 @@ object TableAppElement:
         )
       ),
       tbody(
-        children <-- dataSignal.map:
-          // Note: on each model change we re-render
-          // all items.
-          // Inefficient and loses selection.
-          _.map: item =>
-            renderDataItem(item.id, item)
+        // Note: use split() to only render new elements, rather than
+        // re-rendering he whole list.
+        children <-- dataSignal.split(_.id) { (id, _, itemSignal) =>
+          renderDataItem(id, itemSignal)
+        }
       ),
       tfoot(
         tr(
@@ -55,12 +54,14 @@ object TableAppElement:
     )
   end renderDataTable
 
-  private def renderDataItem(id: DataItemID, item: DataItem): Element =
+  private def renderDataItem(id: DataItemID, itemSignal: Signal[DataItem]): Element =
     tr(
-      td(item.label),
-      td(item.price),
-      td(item.count),
-      td("%.2f".format(item.fullPrice)),
+      td(child.text <-- itemSignal.map(_.label)),
+      td(child.text <-- itemSignal.map(_.price)),
+      td(child.text <-- itemSignal.map(_.count)),
+      td(
+        child.text <-- itemSignal.map(item => "%.2f".format(item.fullPrice))
+      ),
       td(
         button(
           "🗑️ trashit",
