@@ -9,13 +9,15 @@ final class Model:
   val dataSignal: StrictSignal[DataList] = dataVar.signal
 
   // Makes a "mutating" (in the functional sense) observer
-  // for a DataItem specified by Id.
+  // of a stream of A values, for a DataItem specified by Id.
   def makeObserverWhichUpdatesItemWithGivenId[A](id: DataItemID)(
     f: (DataItem, A) => DataItem
   ): Observer[A] =
-    dataVar.updater[A]: (dataList, a) =>
-      dataList.map: item =>
-        if item.id == id then f(item, a) else item
+    dataVar.updater[A]: (oldDataList, newA) =>
+
+      // Note: compute a new DataList.
+      oldDataList.map: item =>
+        if item.id == id then f(item, newA) else item
   end makeObserverWhichUpdatesItemWithGivenId
 
   // Mutator.
