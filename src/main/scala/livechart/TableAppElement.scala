@@ -7,8 +7,7 @@ import com.raquo.laminar.api.L.{*, given}
 //  - contains a Model instance
 object TableAppElement:
 
-  private val model = new Model
-  import model.*
+  private val theModel = new Model
 
   def appElement(): Element =
     div(
@@ -33,7 +32,7 @@ object TableAppElement:
       tbody(
         // Note: use split() to only render new elements, rather than
         // re-rendering he whole list.
-        children <-- dataSignal.split(_.id) { (id, _, itemSignal) =>
+        children <-- theModel.dataSignal.split(_.id) { (id, _, itemSignal) =>
           renderDataItem(id, itemSignal)
         }
       ),
@@ -42,13 +41,13 @@ object TableAppElement:
           td(
             button(
               "➕",
-              onClick --> (_ => addDataItem(DataItem()))
+              onClick --> (_ => theModel.addDataItem(DataItem()))
             )
           ),
           td(),
           td(),
           td(
-            child.text <-- dataSignal.map: data =>
+            child.text <-- theModel.dataSignal.map: data =>
               "%.2f".format(data.map(_.fullPrice).sum)
           )
         )
@@ -58,7 +57,7 @@ object TableAppElement:
 
   private def renderDataList(): Element =
     ul(
-      children <-- dataSignal.split(_.id): (_, _, itemSignal) =>
+      children <-- theModel.dataSignal.split(_.id): (_, _, itemSignal) =>
         li(child.text <-- itemSignal.map(item => s"${item.count} ${item.label}"))
     )
   end renderDataList
@@ -68,10 +67,8 @@ object TableAppElement:
       td(
         inputForString(
           itemSignal.map(_.label),
-          makeItemUpdater[String](
-            id,
-            (item, newLabel) => if item.id == id then item.copy(label = newLabel) else item
-          )
+          theModel.makeObserverWhichUpdatesItemWithGivenId(id): (item, newLabel) =>
+            if item.id == id then item.copy(label = newLabel) else item
         )
       ),
       td(child.text <-- itemSignal.map(_.price)),
@@ -82,20 +79,11 @@ object TableAppElement:
       td(
         button(
           "🗑️ trashit",
-          onClick --> (_ => removeDataItem(id))
+          onClick --> (_ => theModel.removeDataItem(id))
         )
       )
     )
   end renderDataItem
-
-  private def makeItemUpdater[A](
-    id: DataItemID,
-    f: (DataItem, A) => DataItem
-  ): Observer[A] =
-    dataVar.updater[A]: (dataList, a) =>
-      dataList.map: item =>
-        if item.id == id then f(item, a) else item
-  end makeItemUpdater
 
   // Note: this takes data model values as arguments,
   // and returns a Laminar element manipulating those values.
@@ -103,7 +91,9 @@ object TableAppElement:
   // In Laminar, components are nothing but methods manipulating
   // time-varying data and returning Laminar elements.
   private def inputForString(
+    // Input values arrive here.
     valueSignal: Signal[String],
+    // Output values goe here.
     valueUpdater: Observer[String]
   ): Input =
     input(
@@ -111,6 +101,47 @@ object TableAppElement:
       value <-- valueSignal,
       onInput.mapToValue --> valueUpdater
     )
+
   end inputForString
+
+  def inputForDouble(
+    valueSignal: Signal[Double],
+    valueUpdater: Observer[Double]
+  ): Input =
+
+    // Note: this is where inputs propagate to and from where
+    // new values are retrieved.
+    // There is one of these contained (by reference)
+    // within each INPUT element created.
+    //
+    val strValue = Var[String]("")
+
+    input(
+      typ := "text",
+
+      // Note: This binder obviously belongs here because
+      // it updates a DOM element.
+      value <-- strValue.signal,
+
+      // Note: This binder obviously belongs here, because it
+      // needs to propagate values when the "onInput" event occurs.
+      onInput.mapToValue --> strValue,
+
+      // Note: Why is the here?
+      // We put this binder here so it is lifetime-scoped by the
+      // <input> element
+      valueSignal --> strValue.updater[Double] { (prevStr, newValue) =>
+        if prevStr.toDoubleOption.contains(newValue) then prevStr
+        else newValue.toString
+      },
+
+      // Note: Why is the here?
+      // We put this binder here so it is lifetime-scoped by the
+      // <input> element
+      strValue.signal --> { valueStr =>
+        valueStr.toDoubleOption.foreach(valueUpdater.onNext)
+      }
+    )
+  end inputForDouble
 
 end TableAppElement
