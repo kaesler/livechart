@@ -244,6 +244,8 @@ object TableAppElement:
 
       // Bridge the FRP world of dataSignal to the imperative world of the
       // `chart.data`.
+      // We place this binder here os its lifetime is scoped by that of the
+      // <canvas> element.
       theModel.itemListSignal --> { items =>
         for (chart <- optChart) {
           chart.data.labels = items.map(_.label).toJSArray
