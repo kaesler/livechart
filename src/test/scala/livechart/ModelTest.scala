@@ -12,7 +12,7 @@ class ModelTest extends munit.FunSuite:
     val item = DataItem(DataItemID(), "test", 0.5, 2)
     model.addDataItem(item)
 
-    val afterItems = model.dataSignal.now()
+    val afterItems = model.dataListSignal.now()
     assert(afterItems.size == 2)
     assert(afterItems.last == item)
   }
@@ -22,12 +22,12 @@ class ModelTest extends munit.FunSuite:
 
     model.addDataItem(DataItem(DataItemID(), "test", 0.5, 2))
 
-    val beforeItems = model.dataSignal.now()
+    val beforeItems = model.dataListSignal.now()
     assert(beforeItems.size == 2)
 
     model.removeDataItem(beforeItems.head.id)
 
-    val afterItems = model.dataSignal.now()
+    val afterItems = model.dataListSignal.now()
     assert(afterItems.size == 1)
     assert(afterItems == beforeItems.tail)
   }

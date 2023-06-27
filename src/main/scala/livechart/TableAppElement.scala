@@ -32,7 +32,7 @@ object TableAppElement:
       tbody(
         // Note: use split() to only render new elements, rather than
         // re-rendering he whole list.
-        children <-- theModel.dataSignal.split(_.id) { (id, _, itemSignal) =>
+        children <-- theModel.dataListSignal.split(_.id) { (id, _, itemSignal) =>
           renderDataItem(id, itemSignal)
         }
       ),
@@ -47,8 +47,10 @@ object TableAppElement:
           td(),
           td(),
           td(
-            child.text <-- theModel.dataSignal.map: data =>
-              "%.2f".format(data.map(_.fullPrice).sum)
+            child.text <-- theModel.dataListSignal.map (
+              dataList =>
+                "%.2f".format(dataList.map(_.fullPrice).sum)
+            )
           )
         )
       )
@@ -57,8 +59,13 @@ object TableAppElement:
 
   private def renderDataList(): Element =
     ul(
-      children <-- theModel.dataSignal.split(_.id): (_, _, itemSignal) =>
-        li(child.text <-- itemSignal.map(item => s"${item.count} ${item.label}"))
+      children <-- theModel.dataListSignal.split(_.id) {
+        (_, _, itemSignal) =>
+          li(
+            child.text <--
+              itemSignal.map(item => s"${item.count} ${item.label}")
+          )
+      }
     )
   end renderDataList
 
@@ -67,8 +74,10 @@ object TableAppElement:
       td(
         inputForString(
           itemSignal.map(_.label),
-          theModel.makeObserverWhichUpdatesItemWithGivenId(id): (item, newLabel) =>
-            if item.id == id then item.copy(label = newLabel) else item
+          theModel.makeObserverWhichUpdatesItemWithGivenId(id) {
+            (item, newLabel) =>
+              if item.id == id then item.copy(label = newLabel) else item
+          }
         )
       ),
       td(child.text <-- itemSignal.map(_.price)),
@@ -104,7 +113,7 @@ object TableAppElement:
 
   end inputForString
 
-  def inputForDouble(
+  private def inputForDouble(
     valueSignal: Signal[Double],
     valueUpdater: Observer[Double]
   ): Input =
@@ -130,9 +139,10 @@ object TableAppElement:
       // Note: Why is the here?
       // We put this binder here so it is lifetime-scoped by the
       // <input> element
-      valueSignal --> strValue.updater[Double] { (prevStr, newValue) =>
-        if prevStr.toDoubleOption.contains(newValue) then prevStr
-        else newValue.toString
+      valueSignal --> strValue.updater[Double] {
+        (prevStr, newValue) =>
+          if prevStr.toDoubleOption.contains(newValue) then prevStr
+          else newValue.toString
       },
 
       // Note: Why is the here?
@@ -143,5 +153,20 @@ object TableAppElement:
       }
     )
   end inputForDouble
+
+  private def inputForInt(
+    valueSignal: Signal[Int],
+    valueUpdater: Observer[Int]
+  ): Input =
+    input(
+      typ := "text",
+      controlled(
+        value <-- valueSignal.map(_.toString),
+        onInput.mapToValue.map(_.toIntOption).collect { case Some(newCount) =>
+          newCount
+        } --> valueUpdater
+      )
+    )
+  end inputForInt
 
 end TableAppElement
