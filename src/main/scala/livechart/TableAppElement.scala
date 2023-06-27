@@ -72,25 +72,19 @@ object TableAppElement:
       td(
         inputForString(
           itemSignal.map(_.label),
-          theModel.makeObserverWhichUpdatesOneItem(id) { (item, newLabel) =>
-            if item.id == id then item.copy(label = newLabel) else item
-          }
+          theModel.makeObserverToUpdateAnItemLabel(id)
         )
       ),
       td(
         inputForDouble(
           itemSignal.map(_.price),
-          theModel.makeObserverWhichUpdatesOneItem(id) { (item, newPrice) =>
-            if item.id == id then item.copy(price = newPrice) else item
-          }
+          theModel.makeObserverToUpdateAnItemPrice(id)
         )
       ),
       td(
         inputForInt(
           itemSignal.map(_.count),
-          theModel.makeObserverWhichUpdatesOneItem(id) { (item, newCount) =>
-            if item.id == id then item.copy(count = newCount) else item
-          }
+          theModel.makeObserverToUpdateAnItemCount(id)
         )
       ),
       td(
