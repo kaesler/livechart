@@ -32,9 +32,8 @@ object TableAppElement:
       tbody(
         // Note: use split() to only render new elements, rather than
         // re-rendering he whole list.
-        children <-- theModel.itemListSignal.split(_.id) {
-          (id, _, itemSignal) =>
-            renderItem(id, itemSignal)
+        children <-- theModel.itemListSignal.split(_.id) { (id, _, itemSignal) =>
+          renderItem(id, itemSignal)
         }
       ),
       tfoot(
@@ -48,9 +47,8 @@ object TableAppElement:
           td(),
           td(),
           td(
-            child.text <-- theModel.itemListSignal.map {
-              itemList =>
-                "%.2f".format(itemList.map(_.fullPrice).sum)
+            child.text <-- theModel.itemListSignal.map { itemList =>
+              "%.2f".format(itemList.map(_.fullPrice).sum)
             }
           )
         )
@@ -79,7 +77,14 @@ object TableAppElement:
           }
         )
       ),
-      td(child.text <-- itemSignal.map(_.price)),
+      td(
+        inputForDouble(
+          itemSignal.map(_.price),
+          theModel.makeObserverWhichUpdatesOneItem(id) { (item, newPrice) =>
+            if item.id == id then item.copy(price = newPrice) else item
+          }
+        )
+      ),
       td(
         inputForInt(
           itemSignal.map(_.count),
