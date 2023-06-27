@@ -47,9 +47,8 @@ object TableAppElement:
           td(),
           td(),
           td(
-            child.text <-- theModel.itemListSignal.map (
-              itemList =>
-                "%.2f".format(itemList.map(_.fullPrice).sum)
+            child.text <-- theModel.itemListSignal.map(itemList =>
+              "%.2f".format(itemList.map(_.fullPrice).sum)
             )
           )
         )
@@ -59,12 +58,11 @@ object TableAppElement:
 
   private def renderItemList(): Element =
     ul(
-      children <-- theModel.itemListSignal.split(_.id) {
-        (_, _, itemSignal) =>
-          li(
-            child.text <--
-              itemSignal.map(item => s"${item.count} ${item.label}")
-          )
+      children <-- theModel.itemListSignal.split(_.id) { (_, _, itemSignal) =>
+        li(
+          child.text <--
+            itemSignal.map(item => s"${item.count} ${item.label}")
+        )
       }
     )
   end renderItemList
@@ -74,9 +72,8 @@ object TableAppElement:
       td(
         inputForString(
           itemSignal.map(_.label),
-          theModel.makeObserverWhichUpdatesOneItem(id) {
-            (item, newLabel) =>
-              if item.id == id then item.copy(label = newLabel) else item
+          theModel.makeObserverWhichUpdatesOneItem(id) { (item, newLabel) =>
+            if item.id == id then item.copy(label = newLabel) else item
           }
         )
       ),
@@ -140,16 +137,17 @@ object TableAppElement:
       // Note: Why is the here?
       // We put this binder here so it is lifetime-scoped by the
       // <input> element
-      valueSignal --> strValue.updater[Double] {
-        (prevStr, newValue) =>
-          if prevStr.toDoubleOption.contains(newValue) then prevStr
-          else newValue.toString
+      valueSignal --> strValue.updater[Double] { (prevStr, newValue) =>
+        if prevStr.toDoubleOption.contains(newValue) then prevStr
+        else newValue.toString
       },
 
       // Note: Why is the here?
       // We put this binder here so it is lifetime-scoped by the
       // <input> element
       strValue.signal --> { valueStr =>
+        // Note: we only propagate to the model inputs corresponding
+        // to valid Double values.
         valueStr.toDoubleOption.foreach(valueUpdater.onNext)
       }
     )
@@ -161,6 +159,11 @@ object TableAppElement:
   ): Input =
     input(
       typ := "text",
+      // Note: a controlled element is a way to ensure that the value property
+      // is locked to a certain Observable.
+      // In this case we use ".toIntOption" and ".collect" so that only inputs
+      // that can be parsed as valid Int values are accepted and propagated
+      // to the model.
       controlled(
         value <-- valueSignal.map(_.toString),
         onInput.mapToValue.map(_.toIntOption).collect { case Some(newCount) =>
