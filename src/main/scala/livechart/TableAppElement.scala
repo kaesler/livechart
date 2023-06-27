@@ -81,7 +81,12 @@ object TableAppElement:
       ),
       td(child.text <-- itemSignal.map(_.price)),
       td(
-        child.text <-- itemSignal.map(_.count)
+        inputForInt(
+          itemSignal.map(_.count),
+          theModel.makeObserverWhichUpdatesOneItem(id) { (item, newCount) =>
+            if item.id == id then item.copy(count = newCount) else item
+          }
+        )
       ),
       td(
         child.text <-- itemSignal.map(item => "%.2f".format(item.fullPrice))
