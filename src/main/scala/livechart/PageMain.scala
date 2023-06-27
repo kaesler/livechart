@@ -1,10 +1,9 @@
 package livechart
 
+import com.raquo.laminar.api.L.{*, given}
+import org.scalajs.dom
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
-
-import org.scalajs.dom
-import com.raquo.laminar.api.L.{*, given}
 
 // import javascriptLogo from "/javascript.svg"
 @js.native @JSImport("/javascript.svg", JSImport.Default)
