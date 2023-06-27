@@ -32,8 +32,9 @@ object TableAppElement:
       tbody(
         // Note: use split() to only render new elements, rather than
         // re-rendering he whole list.
-        children <-- theModel.itemListSignal.split(_.id) { (id, _, itemSignal) =>
-          renderDataItem(id, itemSignal)
+        children <-- theModel.itemListSignal.split(_.id) {
+          (id, _, itemSignal) =>
+            renderItem(id, itemSignal)
         }
       ),
       tfoot(
@@ -47,9 +48,10 @@ object TableAppElement:
           td(),
           td(),
           td(
-            child.text <-- theModel.itemListSignal.map(itemList =>
-              "%.2f".format(itemList.map(_.fullPrice).sum)
-            )
+            child.text <-- theModel.itemListSignal.map {
+              itemList =>
+                "%.2f".format(itemList.map(_.fullPrice).sum)
+            }
           )
         )
       )
@@ -67,7 +69,7 @@ object TableAppElement:
     )
   end renderItemList
 
-  private def renderDataItem(id: ItemID, itemSignal: Signal[Item]): Element =
+  private def renderItem(id: ItemID, itemSignal: Signal[Item]): Element =
     tr(
       td(
         inputForString(
@@ -78,7 +80,9 @@ object TableAppElement:
         )
       ),
       td(child.text <-- itemSignal.map(_.price)),
-      td(child.text <-- itemSignal.map(_.count)),
+      td(
+        child.text <-- itemSignal.map(_.count)
+      ),
       td(
         child.text <-- itemSignal.map(item => "%.2f".format(item.fullPrice))
       ),
@@ -89,7 +93,7 @@ object TableAppElement:
         )
       )
     )
-  end renderDataItem
+  end renderItem
 
   // Note: this takes data model values as arguments,
   // and returns a Laminar element manipulating those values.
