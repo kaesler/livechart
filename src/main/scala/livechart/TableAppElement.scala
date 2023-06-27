@@ -12,13 +12,13 @@ object TableAppElement:
   def appElement(): Element =
     div(
       h1("Live Chart"),
-      renderDataTable(),
+      renderItemTable(),
       // Note: an extra view of the data
-      renderDataList()
+      renderItemList()
     )
   end appElement
 
-  private def renderDataTable(): Element =
+  private def renderItemTable(): Element =
     table(
       thead(
         tr(
@@ -32,7 +32,7 @@ object TableAppElement:
       tbody(
         // Note: use split() to only render new elements, rather than
         // re-rendering he whole list.
-        children <-- theModel.dataListSignal.split(_.id) { (id, _, itemSignal) =>
+        children <-- theModel.itemListSignal.split(_.id) { (id, _, itemSignal) =>
           renderDataItem(id, itemSignal)
         }
       ),
@@ -41,25 +41,25 @@ object TableAppElement:
           td(
             button(
               "➕",
-              onClick --> (_ => theModel.addDataItem(DataItem()))
+              onClick --> (_ => theModel.addItem(Item()))
             )
           ),
           td(),
           td(),
           td(
-            child.text <-- theModel.dataListSignal.map (
-              dataList =>
-                "%.2f".format(dataList.map(_.fullPrice).sum)
+            child.text <-- theModel.itemListSignal.map (
+              itemList =>
+                "%.2f".format(itemList.map(_.fullPrice).sum)
             )
           )
         )
       )
     )
-  end renderDataTable
+  end renderItemTable
 
-  private def renderDataList(): Element =
+  private def renderItemList(): Element =
     ul(
-      children <-- theModel.dataListSignal.split(_.id) {
+      children <-- theModel.itemListSignal.split(_.id) {
         (_, _, itemSignal) =>
           li(
             child.text <--
@@ -67,14 +67,14 @@ object TableAppElement:
           )
       }
     )
-  end renderDataList
+  end renderItemList
 
-  private def renderDataItem(id: DataItemID, itemSignal: Signal[DataItem]): Element =
+  private def renderDataItem(id: ItemID, itemSignal: Signal[Item]): Element =
     tr(
       td(
         inputForString(
           itemSignal.map(_.label),
-          theModel.makeObserverWhichUpdatesItemWithGivenId(id) {
+          theModel.makeObserverWhichUpdatesOneItem(id) {
             (item, newLabel) =>
               if item.id == id then item.copy(label = newLabel) else item
           }
@@ -88,7 +88,7 @@ object TableAppElement:
       td(
         button(
           "🗑️ trashit",
-          onClick --> (_ => theModel.removeDataItem(id))
+          onClick --> (_ => theModel.removeItem(id))
         )
       )
     )
@@ -129,11 +129,12 @@ object TableAppElement:
       typ := "text",
 
       // Note: This binder obviously belongs here because
-      // it updates a DOM element.
+      // it updates a DOM element when the model changes.
       value <-- strValue.signal,
 
       // Note: This binder obviously belongs here, because it
-      // needs to propagate values when the "onInput" event occurs.
+      // needs to propagate new values to the model when the
+      // "onInput" event occurs.
       onInput.mapToValue --> strValue,
 
       // Note: Why is the here?

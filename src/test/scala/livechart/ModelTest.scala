@@ -2,32 +2,32 @@ package livechart
 
 class ModelTest extends munit.FunSuite:
   test("fullPrice") {
-    val item = DataItem(DataItemID(), "test", 0.5, 5)
+    val item = Item(ItemID(), "test", 0.5, 5)
     assert(item.fullPrice == 2.5)
   }
 
-  test("addDataItem") {
+  test("addItem") {
     val model = new Model
 
-    val item = DataItem(DataItemID(), "test", 0.5, 2)
-    model.addDataItem(item)
+    val item = Item(ItemID(), "test", 0.5, 2)
+    model.addItem(item)
 
-    val afterItems = model.dataListSignal.now()
+    val afterItems = model.itemListSignal.now()
     assert(afterItems.size == 2)
     assert(afterItems.last == item)
   }
 
-  test("removeDataItem") {
+  test("removeItem") {
     val model = new Model
 
-    model.addDataItem(DataItem(DataItemID(), "test", 0.5, 2))
+    model.addItem(Item(ItemID(), "test", 0.5, 2))
 
-    val beforeItems = model.dataListSignal.now()
+    val beforeItems = model.itemListSignal.now()
     assert(beforeItems.size == 2)
 
-    model.removeDataItem(beforeItems.head.id)
+    model.removeItem(beforeItems.head.id)
 
-    val afterItems = model.dataListSignal.now()
+    val afterItems = model.itemListSignal.now()
     assert(afterItems.size == 1)
     assert(afterItems == beforeItems.tail)
   }
